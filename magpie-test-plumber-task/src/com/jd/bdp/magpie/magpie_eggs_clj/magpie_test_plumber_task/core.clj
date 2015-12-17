@@ -47,7 +47,7 @@
   (log/info "run")
   (Thread/sleep 3000)
   (if @client/*reset-albatross-client*
-    (do (client/get-albatross-client @albatross)
+    (do (client/get-albatross-client (:ip @albatross) (:port @albatross))
         (reset! client/*reset-albatross-client* false)))
   (client/heartbeat (:job-id @task) (:task-id @task) (if (> (- (magpie-utils/current-time-millis) @tmp-start-time) 20000)
                                                        STATUS-FINISH
