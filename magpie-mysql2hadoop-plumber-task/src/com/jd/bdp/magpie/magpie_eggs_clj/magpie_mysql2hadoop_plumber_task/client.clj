@@ -1,6 +1,8 @@
 (ns com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.client
   (:require [clojure.tools.logging :as log]
-            [thrift-clj.core :as thrift])
+            [thrift-clj.core :as thrift]
+            [com.jd.bdp.magpie.util.utils :as magpie-utils]
+            [clj-zookeeper.zookeeper :as zk])
   (:import [org.apache.thrift.transport TTransportException]))
 
 (def ^:dynamic *albatross-client* (atom nil))
@@ -26,6 +28,28 @@
     (catch TTransportException e
       (log/error e)
       (reset! *reset-albatross-client* true))))
+
+(defn- prepare-albatross-client
+  [albatross-id]
+  (let [albatrosses-path "/albatross/albatrosses/"
+        albatross-node (str albatrosses-path albatross-id)
+        albatross-info (magpie-utils/bytes->map (zk/get-data albatross-node))
+        albatross-ip (get albatross-info "ip")
+        albatross-port (get albatross-info "port")]
+    (reset! albatross {:id albatross-id
+                       :ip albatross-ip
+                       :port albatross-port})
+    (log/info @albatross)
+    (get-albatross-client (:ip @albatross) (:port @albatross))))
+
+(defn prepare
+  "1、初始化albatross客户端
+   2、获取任务配置信息"
+  [task-id]
+  (let [[_ albatross-id job-id _] (clojure.string/split task-id SEPARATOR)]
+    (prepare-albatross-client albatross-id)
+    (get-conf job-id task-id)))
+
 
 (defn heartbeat
   [job-id task-id status]

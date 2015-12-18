@@ -10,23 +10,8 @@
 
 ;; {:id albatross :ip ip :port port}
 (def ^:dynamic albatross (atom nil))
-;; {:job-id job-id :task-id task-id :uuid :conf conf}
-(def ^:dynamic task (atom nil))
 
 (def ^:dynamic tmp-start-time (atom nil))
-
-(defn- prepare-albatross-client
-  [albatross-id]
-  (let [albatrosses-path "/albatross/albatrosses/"
-        albatross-node (str albatrosses-path albatross-id)
-        albatross-info (magpie-utils/bytes->map (zk/get-data albatross-node))
-        albatross-ip (get albatross-info "ip")
-        albatross-port (get albatross-info "port")]
-    (reset! albatross {:id albatross-id
-                       :ip albatross-ip
-                       :port albatross-port})
-    (log/info @albatross)
-    (client/get-albatross-client (:ip @albatross) (:port @albatross))))
 
 (defn prepare-fn
   [task-id]
