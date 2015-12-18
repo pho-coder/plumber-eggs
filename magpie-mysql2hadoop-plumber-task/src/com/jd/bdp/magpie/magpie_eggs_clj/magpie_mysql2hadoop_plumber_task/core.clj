@@ -15,14 +15,9 @@
 
 (def ^:dynamic tmp-start-time (atom nil))
 
-(defn prepare-fn
-  [task-id]
-  (if (utils/check-task-valid? task-id)
-    (log/info "task id valid ok!" task-id)
-    (do (log/info "task id NOT valid!" task-id)
-        (System/exit 0)))
-  (let [[prefix albatross-id job-id uuid] (clojure.string/split task-id SEPARATOR)
-        albatrosses-path "/albatross/albatrosses/"
+(defn- prepare-albatross-client
+  [albatross-id]
+  (let [albatrosses-path "/albatross/albatrosses/"
         albatross-node (str albatrosses-path albatross-id)
         albatross-info (magpie-utils/bytes->map (zk/get-data albatross-node))
         albatross-ip (get albatross-info "ip")
@@ -31,13 +26,22 @@
                        :ip albatross-ip
                        :port albatross-port})
     (log/info @albatross)
-    (client/get-albatross-client (:ip @albatross) (:port @albatross))
-    (let [conf (client/get-conf job-id task-id)]
-      (reset! task (into conf {:uuid uuid})) 
-      (log/info "task:" @task))
-    (client/heartbeat (:job-id @task) (:task-id @task) STATUS-INIT)
-    (log/info task-id "is preparing!")
-    (reset! tmp-start-time (magpie-utils/current-time-millis))))
+    (client/get-albatross-client (:ip @albatross) (:port @albatross))))
+
+(defn prepare-fn
+  [task-id]
+  (if (utils/check-task-valid? task-id)
+    (log/info "task id valid ok!" task-id)
+    (do (log/info "task id NOT valid!" task-id)
+        (System/exit 0)))
+  (let [[prefix albatross-id job-id uuid] (clojure.string/split task-id SEPARATOR)
+        conf (client/get-conf job-id task-id)]
+    (prepare-albatross-client albatross-id)
+    (reset! task (into conf {:uuid uuid}))
+    (log/info prefix "task:" @task))
+  (client/heartbeat (:job-id @task) (:task-id @task) STATUS-INIT)
+  (log/info task-id "is preparing!")
+  (reset! tmp-start-time (magpie-utils/current-time-millis)))
 
 (defn run-fn [task-id]
   (log/info (magpie-utils/current-time-millis))
