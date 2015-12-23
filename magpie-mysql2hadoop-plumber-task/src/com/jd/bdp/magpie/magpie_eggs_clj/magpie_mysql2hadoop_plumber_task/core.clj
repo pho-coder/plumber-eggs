@@ -23,8 +23,12 @@
 
 (defn run-fn [task-id]
   (log/info "run")
-
-  )
+  (controller/start-task)
+  (while true
+    (controller/send-heartbeat)
+    (log/info "task status:" (controller/get-task-status))
+    (log/info "task is done=" (controller/task-done?))
+    (Thread/sleep 10000)))
 
 (defn -main
   "I don't do a whole lot ... yet."
@@ -34,4 +38,5 @@
     (task-executor/execute run-fn :prepare-fn prepare-fn)
     (catch Throwable e
       (log/error e)
-      (log/info "bye"))))
+      ;(log/info "bye")
+      )))

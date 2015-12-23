@@ -11,13 +11,15 @@
 
 (defn get-albatross-id
   [task-id]
-  ; (= 2 (nth [0 1 2 3] 2))
   (nth (split-task-id task-id) 1))
 
 (defn get-job-id
   [task-id]
-  ; (= 2 (nth [0 1 2 3] 2))
   (nth (split-task-id task-id) 2))
+
+(defn get-task-uuid
+  [task-id]
+  (nth (split-task-id task-id) 3))
 
 (defn check-task-valid?
   [task-id]
