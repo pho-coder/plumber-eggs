@@ -6,10 +6,8 @@
             [com.jd.bdp.magpie.magpie-framework-clj.task-executor :as task-executor]
             [com.jd.bdp.magpie.util.utils :as magpie-utils]
             [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.utils :as utils]
+            [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.controller :as controller]
             [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.client :as client]))
-
-;; {:id albatross :ip ip :port port}
-(def ^:dynamic albatross (atom nil))
 
 (def ^:dynamic tmp-start-time (atom nil))
 
@@ -19,25 +17,14 @@
     (log/info "task id valid ok!" task-id)
     (do (log/info "task id NOT valid!" task-id)
         (System/exit 0)))
-  (let [[prefix albatross-id job-id uuid] (clojure.string/split task-id SEPARATOR)
-        conf (client/get-conf job-id task-id)]
-    (prepare-albatross-client albatross-id)
-    (reset! task (into conf {:uuid uuid}))
-    (log/info prefix "task:" @task))
-  (client/heartbeat (:job-id @task) (:task-id @task) STATUS-INIT)
+  (client/prepare task-id)
   (log/info task-id "is preparing!")
   (reset! tmp-start-time (magpie-utils/current-time-millis)))
 
 (defn run-fn [task-id]
-  (log/info (magpie-utils/current-time-millis))
   (log/info "run")
-  (Thread/sleep 3000)
-  (if @client/*reset-albatross-client*
-    (do (client/get-albatross-client (:ip @albatross) (:port @albatross))
-        (reset! client/*reset-albatross-client* false)))
-  (client/heartbeat (:job-id @task) (:task-id @task) (if (> (- (magpie-utils/current-time-millis) @tmp-start-time) 20000)
-                                                       STATUS-FINISH
-                                                       STATUS-RUNNING)))
+
+  )
 
 (defn -main
   "I don't do a whole lot ... yet."

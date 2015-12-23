@@ -6,6 +6,7 @@
   (:import [org.apache.thrift.transport TTransportException]))
 
 (def ^:dynamic *albatross-client* (atom nil))
+(def ^:dynamic *task-conf* (atom nil))
 (def ^:dynamic *reset-albatross-client* (atom nil))
 
 (thrift/import
@@ -46,10 +47,8 @@
   "1、初始化albatross客户端
    2、获取任务配置信息"
   [task-id]
-  (let [[_ albatross-id job-id _] (clojure.string/split task-id SEPARATOR)]
-    (prepare-albatross-client albatross-id)
-    (get-conf job-id task-id)))
-
+  (let [[ _ albatross-id _ _ ] (clojure.string/split task-id SEPARATOR)]
+    (prepare-albatross-client albatross-id)))
 
 (defn heartbeat
   [job-id task-id status]
