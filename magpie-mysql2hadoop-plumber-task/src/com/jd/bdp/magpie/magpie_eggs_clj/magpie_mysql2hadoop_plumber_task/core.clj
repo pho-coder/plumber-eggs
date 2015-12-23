@@ -17,7 +17,7 @@
     (log/info "task id valid ok!" task-id)
     (do (log/info "task id NOT valid!" task-id)
         (System/exit 0)))
-  (client/prepare task-id)
+  (controller/prepare task-id)
   (log/info task-id "is preparing!")
   (reset! tmp-start-time (magpie-utils/current-time-millis)))
 

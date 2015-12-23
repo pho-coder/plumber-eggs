@@ -2,11 +2,13 @@
   (:require [clojure.tools.logging :as log]
             [thrift-clj.core :as thrift]
             [com.jd.bdp.magpie.util.utils :as magpie-utils]
-            [clj-zookeeper.zookeeper :as zk])
+            [clj-zookeeper.zookeeper :as zk]
+            [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.utils :as utils])
+  (:use com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.bootstrap)
   (:import [org.apache.thrift.transport TTransportException]))
 
+(def ^:dynamic *albatross* (atom nil))
 (def ^:dynamic *albatross-client* (atom nil))
-(def ^:dynamic *task-conf* (atom nil))
 (def ^:dynamic *reset-albatross-client* (atom nil))
 
 (thrift/import
@@ -22,32 +24,29 @@
       (reset! *reset-albatross-client* true))))
 
 (defn get-conf
-  [job-id task-id]
+  [task-id]
   (try
-    (let [conf (Albatross/getTaskConf @*albatross-client* job-id task-id)]
-      conf)
+    (let [job-id (utils/get-job-id task-id)]
+      (Albatross/getTaskConf @*albatross-client* job-id task-id))
     (catch TTransportException e
       (log/error e)
       (reset! *reset-albatross-client* true))))
 
 (defn- prepare-albatross-client
   [albatross-id]
-  (let [albatrosses-path "/albatross/albatrosses/"
-        albatross-node (str albatrosses-path albatross-id)
-        albatross-info (magpie-utils/bytes->map (zk/get-data albatross-node))
-        albatross-ip (get albatross-info "ip")
-        albatross-port (get albatross-info "port")]
-    (reset! albatross {:id albatross-id
-                       :ip albatross-ip
-                       :port albatross-port})
-    (log/info @albatross)
-    (get-albatross-client (:ip @albatross) (:port @albatross))))
+  (let [albatross-node (str ALBATROSSES-PART albatross-id)
+        albatross-info (magpie-utils/bytes->map (zk/get-data albatross-node))]
+    (reset! *albatross* {:id albatross-id
+                         :ip (get albatross-info "ip")
+                         :port (get albatross-info "port")})
+    (log/info @*albatross*)
+    (get-albatross-client (:ip @*albatross*) (:port @*albatross*))))
 
 (defn prepare
   "1、初始化albatross客户端
    2、获取任务配置信息"
   [task-id]
-  (let [[ _ albatross-id _ _ ] (clojure.string/split task-id SEPARATOR)]
+  (let [albatross-id (utils/get-albatross-id task-id)]
     (prepare-albatross-client albatross-id)))
 
 (defn heartbeat

@@ -7,4 +7,6 @@
 (def STATUS-FINISH "finish")
 (def STATUS-STOP "stop")
 
+(def ALBATROSSES-PART "/albatross/albatrosses/")
+
 (def SEPARATOR #"\*p\*")

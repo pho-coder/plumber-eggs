@@ -4,6 +4,21 @@
             [clj-zookeeper.zookeeper :as zk]
             [com.jd.bdp.magpie.util.utils :as magpie-utils]))
 
+(defn- split-task-id
+  [task-id]
+  ; [prefix albatross-id job-id uuid]
+  (clojure.string/split task-id SEPARATOR))
+
+(defn get-albatross-id
+  [task-id]
+  ; (= 2 (nth [0 1 2 3] 2))
+  (nth (split-task-id task-id) 1))
+
+(defn get-job-id
+  [task-id]
+  ; (= 2 (nth [0 1 2 3] 2))
+  (nth (split-task-id task-id) 2))
+
 (defn check-task-valid?
   [task-id]
   (let [[prefix albatross-id job-id uuid] (clojure.string/split task-id SEPARATOR)]
