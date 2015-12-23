@@ -1,12 +1,13 @@
 (ns com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.controller
   (:require [clojure.tools.logging :as log]
             [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.client :as client]
-            [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.utils :as utils]))
+            [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.utils :as utils])
+  (:use com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.bootstrap))
 
 (def ^:dynamic *task-status* (atom nil))
 ;; {:job-id job-id :task-id task-id :uuid :conf conf}
 (def ^:dynamic *task-conf* (atom nil))
-(def ^:dynamic *prepareed* (atom false))
+(def ^:dynamic *prepared* (atom false))
 
 (defn upgrade-task-status
   "任务的状态不能倒退
@@ -16,18 +17,20 @@
 
 (defn start-task
   []
-  (upgrade-task-status "init")
   (doto
     (Thread. #((log/info "start task, config:" (:conf @*task-conf*))
                (try
-                 (Thread/sleep 10000)
-                 (upgrade-task-status "running")
                  ; TODO 执行任务 sql -> reader -> data -> writter
+
+                 (upgrade-task-status STATUS-INIT)
+                 (Thread/sleep 10000)
+                 (upgrade-task-status STATUS-RUNNING)
                  (Thread/sleep 120000)
-                 (upgrade-task-status "done")
+                 (upgrade-task-status STATUS-FINISH)
+
                  (catch Exception e
                    (log/error "error" e)
-                   (upgrade-task-status "error")))
+                   (upgrade-task-status STATUS-STOP)))
                (log/info "task final status:" *task-status*)))
     (.setDaemon true)
     (.start)))
@@ -54,4 +57,4 @@
         uuid (utils/get-task-uuid task-id)
         conf (client/get-conf task-id)]
     (reset! *task-conf* {:job-id job-id :task-id task-id :uuid uuid :conf conf}))
-  (reset! *prepareed* true))
+  (reset! *prepared* true))
