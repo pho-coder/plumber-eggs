@@ -19,7 +19,6 @@
   (log/info "task id=" task-id)
   (log/info "task is done=" (controller/task-done?))
   (log/info "task status=" (controller/get-task-status))
-  (controller/send-heartbeat)
   (Thread/sleep 10000))
 
 (defn -main

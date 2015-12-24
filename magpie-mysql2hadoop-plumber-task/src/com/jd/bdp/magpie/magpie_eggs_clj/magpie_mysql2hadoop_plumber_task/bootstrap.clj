@@ -9,4 +9,6 @@
 
 (def ALBATROSSES-PART "/albatross/albatrosses/")
 
+(def QUEEU-LENGTH 100)
+
 (def SEPARATOR #"\*p\*")
