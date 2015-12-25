@@ -1,4 +1,5 @@
-(ns com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.bootstrap)
+(ns com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.bootstrap
+  (:import (java.util.concurrent LinkedBlockingQueue)))
 
 (use 'clojure.set)
 
@@ -12,6 +13,11 @@
 (def QUEEU-LENGTH 100)
 
 (def SEPARATOR #"\*p\*")
+
+(def ^:dynamic DATA-CACHE-QUEUE (LinkedBlockingQueue. QUEEU-LENGTH))
+
+(def IO-DONE "done")
+(def IO-ERROR "error")
 
 (def BASE-CONF {:source "mysql"
                 :target "hadoop"
