@@ -55,7 +55,12 @@
         uuid (utils/get-task-uuid task-id)
         conf (client/get-conf task-id)]
     (reset! *task-conf* {:job-id job-id :task-id task-id :uuid uuid :conf conf}))
+  (log/info "task conf:" @*task-conf*)
   (reset! *prepared* true))
+
+(defn prepared?
+  []
+  @*prepared*)
 
 (defn reader
   []

@@ -17,6 +17,8 @@
 
 (defn run-fn [task-id]
   (log/info "task id=" task-id)
+  (while (not (controller/prepared?))
+    (log/info "task is preparing..."))
   (log/info "task is done=" (controller/task-done?))
   (log/info "task status=" (controller/get-task-status))
   (Thread/sleep 10000))
