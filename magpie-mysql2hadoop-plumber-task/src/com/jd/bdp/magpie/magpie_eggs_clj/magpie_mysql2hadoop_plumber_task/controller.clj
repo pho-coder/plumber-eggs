@@ -53,7 +53,7 @@
 (defn start-task
   []
   (upgrade-and-send-status STATUS-INIT)
-  (let [f-reader (future (conveyor/reader))
+  (let [f-reader (future (conveyor/reader @*task-conf*))
         f-writer (future (conveyor/writer))]
     (log/info "reader thread:" @f-reader)
     (log/info "writer thread:" @f-writer)))

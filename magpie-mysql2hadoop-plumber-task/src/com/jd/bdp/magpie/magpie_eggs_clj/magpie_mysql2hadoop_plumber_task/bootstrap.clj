@@ -21,7 +21,8 @@
 
 (def BASE-CONF {:source "mysql"
                 :target "hadoop"
-                :sql "select * from a"
+                :sql "select * from Persons"
+                :db-name "User"
                 :jar "magpie-mysql2hadoop-plumber-task-0.0.1-SNAPSHOT-standalone.jar"
                 :klass "com.jd.bdp.magpie.magpie_eggs_clj.magpie_mysql2hadoop_plumber_task.core"
                 :group "default"

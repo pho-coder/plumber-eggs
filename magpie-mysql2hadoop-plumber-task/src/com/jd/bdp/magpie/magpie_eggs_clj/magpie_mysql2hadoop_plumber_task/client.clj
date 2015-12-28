@@ -27,7 +27,9 @@
   [task-id]
   (try
     (let [job-id (utils/get-job-id task-id)]
-      (Albatross/getTaskConf @*albatross-client* job-id task-id))
+      (Albatross/getTaskConf @*albatross-client* job-id task-id)
+      ; TODO
+      BASE-CONF)
     (catch TTransportException e
       (log/error e)
       (reset! *reset-albatross-client* true))))
