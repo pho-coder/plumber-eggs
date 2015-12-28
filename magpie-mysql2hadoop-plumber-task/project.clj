@@ -14,9 +14,9 @@
                  [clj-zookeeper "0.2.0-SNAPSHOT"]
                  [mysql-java "5.1.21"]
                  [org.clojure/java.jdbc "0.4.2"]
-                 [org.clojars.strad/clojure-hadoop "1.2.2"]
-                 [com.jd.bdp.magpie/magpie-utils "0.1.3-SNAPSHOT"]
-                 [clj-hdfs "0.0.2"]]
+                 [org.apache.hadoop/hadoop-common "2.2.0"]
+                 [org.apache.hadoop/hadoop-hdfs "2.2.0"]
+                 [com.jd.bdp.magpie/magpie-utils "0.1.3-SNAPSHOT"]]
   :main ^:skip-aot com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.core
   :target-path "target/%s"
   :profiles {:uberjar {:aot :all}}

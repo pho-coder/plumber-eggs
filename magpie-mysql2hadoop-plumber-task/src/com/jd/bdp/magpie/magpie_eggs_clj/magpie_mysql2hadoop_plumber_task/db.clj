@@ -1,8 +1,8 @@
 (ns com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.db
-  (:require [clojure.java.jdbc :as jdbc])
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.tools.logging :as log])
   (:import (org.apache.hadoop.conf Configuration)
-           (org.apache.hadoop.fs FileSystem Path)
-           (java.net URI)))
+           (org.apache.hadoop.fs FileSystem Path)))
 
 (def spec {:subprotocol "mysql"})
 
@@ -17,42 +17,28 @@
                           (str acc k "::" v "\t"))
                         ""
                         row)]
+    (println (str str-row "\n"))
     (str str-row "\n")))
 
-(defn- write-data
-  [writer str-row]
-  (let [byte-row (.getBytes str-row)
-        row-len (.length byte-row)]
-    (.write writer byte-row 0 row-len)))
-
-(defn write-append
-  [rows str-path & {:keys [parse-fn]
-                    :or {parse-fn default-parse-fn}}]
-  (let [conf (Configuration.)
-        _ (.setBoolean conf "dfs.support.append" true)
-        hdfs (FileSystem/get (URI/create str-path) conf)
-        writer (.append hdfs (Path. str-path))]
-    (println "ssss")
-    (doseq [row rows]
-      (try
-        (write-data writer (parse-fn row))
-        (catch Exception e
-          (println e))))
-    (.close writer)
-    (.close hdfs)))
+(defn ^Configuration configuration
+  "Returns the Hadoop configuration."
+  [] (let [config (Configuration.)]
+       (if-let [hadoop_config_dir (System/getenv "HADOOP_CONF_DIR")]
+         (do
+           (println "HADOOP_CONF_DIR:" hadoop_config_dir)
+           (.addResource config (Path. (str hadoop_config_dir "/core-site.xml")))
+           (.addResource config (Path. (str hadoop_config_dir "/hdfs-site.xml")))))
+       config))
 
 (defn write
   [rows str-path & {:keys [parse-fn]
                     :or {parse-fn default-parse-fn}}]
-  (let [conf (Configuration.)
+  (let [conf (configuration)
         hdfs (FileSystem/get conf)
-        _ (println (Path. str-path))
         _ (println (.exists hdfs (Path. str-path)))
-        _ (println "deleted?" (.deleteOnExit hdfs (Path. str-path)))
         writer (.create hdfs (Path. str-path))]
     (doseq [row rows]
       (try
-        (println row)
         (.writeUTF writer (parse-fn row))
         (catch Exception e
           (println e))))
@@ -61,8 +47,7 @@
 
 (defn test-write-fn
   []
-  (let [                                                    ;tmp-path "/user/xiaochaihu/input/user.txt"
-        tmp-path "user.txt"
+  (let [tmp-path "hdfs://localhost:9000/user/xiaochaihu/user.txt"
         rows [{:name "zeng" :age 1 :address "beijing"}
               {:name "zeng" :age 2 :address "beijing2"}
               {:name "zeng" :age 3 :address "beijing3"}
