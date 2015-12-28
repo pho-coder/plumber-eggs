@@ -36,7 +36,7 @@
       ; 连接数据库
       ; 写入数据
       (if (> (.size DATA-CACHE-QUEUE) 0)
-        (do
+        (let []
           (print "write's size" (.size DATA-CACHE-QUEUE))
           ; TODO WRITE TO HADOOP
           (println " item:" (.poll DATA-CACHE-QUEUE)))
