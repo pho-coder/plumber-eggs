@@ -14,6 +14,8 @@
 
 (def SEPARATOR #"\*p\*")
 
+(def DATA-BUFFER-MAX-SIZE (* 1024 1024 10))
+
 (def ^:dynamic DATA-CACHE-QUEUE (LinkedBlockingQueue. QUEEU-LENGTH))
 
 (def IO-DONE "done")
