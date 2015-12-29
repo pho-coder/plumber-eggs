@@ -33,8 +33,6 @@
   []
   (while true
     (try
-      ; 连接数据库
-      ; 写入数据
       (if (> (.size DATA-CACHE-QUEUE) 0)
         (let []
           (print "write's size" (.size DATA-CACHE-QUEUE))
