@@ -19,11 +19,8 @@
   (let [conf (configuration)
         hdfs (FileSystem/get (URI/create str-path) conf)
         writer (.create hdfs (Path. str-path))]
-    (try
-      (.write writer buffer)
-      (.flush writer)
-      (.sync writer)
-      (.close writer)
-      (.close hdfs)
-      (catch Exception e
-        (log/error "HDFS IO error:" e)))))
+    (.write writer buffer)
+    (.flush writer)
+    (.sync writer)
+    (.close writer)
+    (.close hdfs)))

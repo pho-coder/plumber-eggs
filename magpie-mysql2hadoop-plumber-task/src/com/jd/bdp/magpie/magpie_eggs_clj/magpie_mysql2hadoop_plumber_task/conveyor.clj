@@ -34,10 +34,13 @@
   (while true
     (try
       (if (> (.size DATA-CACHE-QUEUE) 0)
-        (let []
-          (print "write's size" (.size DATA-CACHE-QUEUE))
+        (let [row (.poll DATA-CACHE-QUEUE)
+              ; TODO 转化为字符串，去除特殊字符
+              row-str (str (clojure.string/join "\t" row) "\n")
+              row-buf (.getBytes row-str)]
           ; TODO WRITE TO HADOOP
-          (println " item:" (.poll DATA-CACHE-QUEUE)))
+          #_(db/write row-buf (:target-path conf))
+          (db/write row-buf (str "task-time-" (System/currentTimeMillis))))
         (do
           (println "write's size" (.size DATA-CACHE-QUEUE))
           (Thread/sleep 100)))
