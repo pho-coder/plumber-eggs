@@ -10,21 +10,23 @@
 
 (def ALBATROSSES-PART "/albatross/albatrosses/")
 
-(def QUEEU-LENGTH 100)
-
 (def SEPARATOR #"\*p\*")
 
-(def DATA-BUFFER-MAX-SIZE (* 1024 1024 10))
+(def DATA-BUFFER-MAX-SIZE (* 256 1))
 
+(def QUEEU-LENGTH 100)
 (def ^:dynamic DATA-CACHE-QUEUE (LinkedBlockingQueue. QUEEU-LENGTH))
 
 (def IO-DONE "done")
 (def IO-ERROR "error")
 
 (def BASE-CONF {:source "mysql"
-                :target "hadoop"
+                :target "mysql2hadoop.log."
                 :sql "select * from Persons"
+                :sqls ["select * from Persons"]
                 :db-name "User"
+                :user "xiao"
+                :password "mysql"
                 :jar "magpie-mysql2hadoop-plumber-task-0.0.1-SNAPSHOT-standalone.jar"
                 :klass "com.jd.bdp.magpie.magpie_eggs_clj.magpie_mysql2hadoop_plumber_task.core"
                 :group "default"
