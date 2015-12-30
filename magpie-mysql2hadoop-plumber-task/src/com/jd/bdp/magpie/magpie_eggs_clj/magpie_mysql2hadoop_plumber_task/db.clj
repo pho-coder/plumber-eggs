@@ -14,15 +14,28 @@
         rs (jdbc/query conf sql :as-arrays? true)]
     (map (fn [row] (map #(str %) row)) (rest rs))))
 
+(defn- write-cache-to-db
+  [str-path]
+  ; 根据不同的 target-type 使用不同的write方法，写入对应的数据库或文件
+  (hdfs/write (.toByteArray data-buffer) str-path)
+  (.reset data-buffer))
+
+(defn- write-row-buf-to-cache
+  [row-buf row-len]
+  (.write data-buffer row-buf 0 row-len))
+
 (defn write
-  [row-buf str-path]
+  [row-buf str-path all-done & {:keys [target-type]
+                                     :or {target-type nil}}]
   (let [buf-len (.size data-buffer)
-        row-len (alength row-buf)]
-    (if (< (+ buf-len row-len) DATA-BUFFER-MAX-SIZE)
-      (.write data-buffer row-buf 0 row-len)
-      (try                                                    ;else
-        (println "len:" buf-len row-len (+ buf-len row-len))
-        (hdfs/write (.toByteArray data-buffer) (str str-path (System/currentTimeMillis)))
-        (.reset data-buffer)
-        (catch Exception e
-          (log/error "IO ERROR:" e))))))
+        row-len (alength row-buf)
+        queue-will-overflow (>= (+ buf-len row-len) DATA-BUFFER-MAX-SIZE)]
+
+    (if (true? queue-will-overflow)
+      (write-cache-to-db (str str-path (System/currentTimeMillis))))
+    ; 把当前的 row-buf
+    (write-row-buf-to-cache row-buf row-len)
+    ; 如果
+    (if (true? all-done)
+      (do (println "所有读写结束，写入剩下的数据。")
+          (write-cache-to-db (str str-path (System/currentTimeMillis)))))))

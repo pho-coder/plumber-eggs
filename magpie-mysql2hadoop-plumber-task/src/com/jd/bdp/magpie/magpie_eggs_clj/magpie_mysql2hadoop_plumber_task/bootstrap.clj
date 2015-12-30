@@ -23,7 +23,7 @@
 (def BASE-CONF {:source "mysql"
                 :target "mysql2hadoop.log."
                 :sql "select * from Persons"
-                :sqls ["select * from Persons"]
+                :sqls ["select * from Users" "select * from Persons"]
                 :db-name "User"
                 :user "xiao"
                 :password "mysql"
