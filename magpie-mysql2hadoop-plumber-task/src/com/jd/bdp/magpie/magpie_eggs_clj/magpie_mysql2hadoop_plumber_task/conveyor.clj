@@ -20,17 +20,6 @@
     true
     false))
 
-(defn start-query-thread
-  ; 单线程
-  [user password db-name sql]
-  (try
-    (doseq [row (db/query user password db-name sql)]
-      (.add DATA-CACHE-QUEUE row))
-    (reset! *reader-status* IO-DONE)
-    (catch Exception e
-      (log/error "reader error:" e)
-      (reset! *reader-status* IO-ERROR))))
-
 (defn all-read-thread-done?
   []
   (println @*done-thread-num* @*read-thread-num*)
@@ -39,18 +28,15 @@
     false))
 
 (defn start-query-thread
-  ; 多线程
   [user password db-name sql]
   (let [athread (future
                   (try
                     (doseq [row (db/query user password db-name sql)]
                       (println row)
                       (while (>= (.size DATA-CACHE-QUEUE) QUEEU-LENGTH)
-                        (println "queue is overflow")
+                        (log/info "DATA-CACHE-QUEUE is full.")
                         (Thread/sleep 1000))
-                      (.add DATA-CACHE-QUEUE row)
-                      ; TODO
-                      #_(Thread/sleep 10))
+                      (.add DATA-CACHE-QUEUE row))
                     (swap! *done-thread-num* inc)
                     (catch Exception e
                       (log/error "reader error:" e)
@@ -62,7 +48,6 @@
   (let [conf (:conf taks-conf)
         [user password db-name sqls] ((juxt :user :password :db-name :sqls) conf)]
     ; 需要启动的线程总数
-    (println "sqls: " (count sqls))
     (reset! *read-thread-num* (count sqls))
     (doseq [sql sqls]
       (start-query-thread user password db-name sql))))
@@ -86,7 +71,6 @@
                   row-buf (.getBytes row-str)]
               ; TODO WRITE TO HADOOP
               (db/write row-buf (:target conf) all-done)
-              (println "all done? =" all-done)
               (if (true? all-done)
                 (do
                   (reset! *reader-status* IO-DONE)
