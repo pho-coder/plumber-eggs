@@ -28,10 +28,10 @@
     false))
 
 (defn start-query-thread
-  [user password db-name sql]
+  [user password db-name sql host]
   (let [athread (future
                   (try
-                    (doseq [row (db/query user password db-name sql)]
+                    (doseq [row (db/query user password db-name sql host)]
                       (println row)
                       (while (>= (.size DATA-CACHE-QUEUE) QUEEU-LENGTH)
                         (log/info "DATA-CACHE-QUEUE is full.")
@@ -46,11 +46,11 @@
 (defn reader
   [taks-conf]
   (let [conf (:conf taks-conf)
-        [user password db-name sqls] ((juxt :user :password :db-name :sqls) conf)]
+        [user password db-name sqls host] ((juxt :user :password :db-name :sqls :host) conf)]
     ; 需要启动的线程总数
     (reset! *read-thread-num* (count sqls))
     (doseq [sql sqls]
-      (start-query-thread user password db-name sql))))
+      (start-query-thread user password db-name sql host))))
 
 (defn writer
   [task-conf]

@@ -9,8 +9,8 @@
 (def ^:dynamic data-buffer (ByteArrayOutputStream. DATA-BUFFER-MAX-SIZE))
 
 (defn query
-  [user password db-name sql]
-  (let [conf (into spec {:user user :password password :subname (str "//localhost:3306/" db-name)})
+  [user password db-name sql host]
+  (let [conf (into spec {:user user :password password :subname (str "//" host ":3306/" db-name)})
         rs (jdbc/query conf sql :as-arrays? true)]
     (map (fn [row] (map #(str %) row)) (rest rs))))
 

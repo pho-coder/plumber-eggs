@@ -41,7 +41,7 @@
   (client/prepare task-id)
   (let [job-id (utils/get-job-id task-id)
         uuid (utils/get-task-uuid task-id)
-        conf BASE-CONF #_(client/get-conf task-id)]
+        conf (client/get-conf task-id)]
     (reset! *task-conf* {:job-id job-id :task-id task-id :uuid uuid :conf conf}))
   (log/info "task conf:" @*task-conf*)
   (reset! *prepared* true))
@@ -52,8 +52,8 @@
 
 (defn start-task
   []
-  ;(upgrade-and-send-status STATUS-INIT)
-  (reset! *task-conf* {:job-id "job-id" :task-id "task-id" :uuid "uuid" :conf BASE-CONF})
+  (upgrade-and-send-status STATUS-INIT)
+  ;(reset! *task-conf* {:job-id "job-id" :task-id "task-id" :uuid "uuid" :conf BASE-CONF})
   (let [f-reader (future (conveyor/reader @*task-conf*))
         f-writer (future (conveyor/writer @*task-conf*))]
     (log/info "reader thread:" @f-reader)

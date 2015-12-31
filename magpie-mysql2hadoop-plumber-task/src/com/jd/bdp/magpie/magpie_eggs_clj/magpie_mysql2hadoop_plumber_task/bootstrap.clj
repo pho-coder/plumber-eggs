@@ -22,6 +22,7 @@
 
 (def BASE-CONF {:source "mysql"
                 :target "mysql2hadoop.log."
+                :host "127.0.0.1"
                 :sql "select * from Persons"
                 :sqls ["select * from Users" "select * from Persons"]
                 :db-name "User"
