@@ -42,6 +42,7 @@
   (let [job-id (utils/get-job-id task-id)
         uuid (utils/get-task-uuid task-id)
         conf (client/get-conf task-id)]
+    (log/info "type of conf" (type conf))
     (reset! *task-conf* {:job-id job-id :task-id task-id :uuid uuid :conf conf}))
   (log/info "task conf:" @*task-conf*)
   (reset! *prepared* true))

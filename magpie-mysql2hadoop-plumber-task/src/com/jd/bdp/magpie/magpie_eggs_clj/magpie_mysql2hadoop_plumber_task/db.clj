@@ -32,10 +32,10 @@
         queue-will-overflow (>= (+ buf-len row-len) DATA-BUFFER-MAX-SIZE)]
 
     (if (true? queue-will-overflow)
-      (write-cache-to-db (str str-path (System/currentTimeMillis))))
+      (write-cache-to-db str-path))
     ; 把当前的 row-buf
     (write-row-buf-to-cache row-buf row-len)
     ; 如果
     (if (true? all-done)
       (do (println "所有读写结束，写入剩下的数据。")
-          (write-cache-to-db (str str-path (System/currentTimeMillis)))))))
+          (write-cache-to-db str-path)))))

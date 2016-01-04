@@ -22,7 +22,6 @@
 
 (defn all-read-thread-done?
   []
-  (println @*done-thread-num* @*read-thread-num*)
   (if (= @*done-thread-num* @*read-thread-num*)
     true
     false))
@@ -32,11 +31,11 @@
   (let [athread (future
                   (try
                     (doseq [row (db/query user password db-name sql host)]
-                      (println row)
                       (while (>= (.size DATA-CACHE-QUEUE) QUEEU-LENGTH)
                         (log/info "DATA-CACHE-QUEUE is full.")
                         (Thread/sleep 1000))
                       (.add DATA-CACHE-QUEUE row))
+                    ; 如果当前线程完成，*done-thread-num* 记数增加 1
                     (swap! *done-thread-num* inc)
                     (catch Exception e
                       (log/error "reader error:" e)
@@ -62,7 +61,7 @@
       (while true
         (if (> (.size DATA-CACHE-QUEUE) 0)
           (do
-            (println "queue's size =" (.size DATA-CACHE-QUEUE))
+            (log/info "queue's size =" (.size DATA-CACHE-QUEUE))
             (let [row (.poll DATA-CACHE-QUEUE)
                   queue-size (.size DATA-CACHE-QUEUE)
                   all-done (and (= queue-size 0) (all-read-thread-done?))
@@ -76,9 +75,8 @@
                   (reset! *reader-status* IO-DONE)
                   (reset! *writer-status* IO-DONE)))))
           (do
-            (println "queue's size =" (.size DATA-CACHE-QUEUE))
-            (println "all read thread done? " (all-read-thread-done?))
-            (Thread/sleep 1000))))
+            (log/info "queue's size =" (.size DATA-CACHE-QUEUE) ", all read thread done? " (all-read-thread-done?))
+            (Thread/sleep 5))))
       (catch Exception e
         (log/error "writer error:" e)
         (reset! *writer-status* IO-ERROR)))))

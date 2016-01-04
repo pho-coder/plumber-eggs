@@ -1,6 +1,7 @@
 (ns com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.client
   (:require [clojure.tools.logging :as log]
             [thrift-clj.core :as thrift]
+            [clojure.data.json :as json]
             [com.jd.bdp.magpie.util.utils :as magpie-utils]
             [clj-zookeeper.zookeeper :as zk]
             [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.utils :as utils])
@@ -27,7 +28,7 @@
   [task-id]
   (try
     (let [job-id (utils/get-job-id task-id)]
-      (Albatross/getTaskConf @*albatross-client* job-id task-id))
+      (json/read-str (Albatross/getTaskConf @*albatross-client* job-id task-id) :key-fn keyword))
     (catch TTransportException e
       (log/error e)
       (reset! *reset-albatross-client* true))))
