@@ -8,10 +8,8 @@
   "Returns the Hadoop configuration."
   []
   (let [config (Configuration.)]
-    (if-let [hadoop_config_dir (System/getenv "HADOOP_CONF_DIR")]
-      (do
-        (.addResource config (Path. (str hadoop_config_dir "/core-site.xml")))
-        (.addResource config (Path. (str hadoop_config_dir "/hdfs-site.xml")))))
+    (.addResource config (Path. "core-site.xml"))
+    (.addResource config (Path. "hdfs-site.xml"))
     config))
 
 (defn write

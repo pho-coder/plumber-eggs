@@ -22,6 +22,7 @@
   :profiles {:uberjar {:aot :all}}
   :plugins [[lein-thriftc "0.2.3"]]
   :hooks [leiningen.thriftc]
+  :resource-paths ["resources"]
   :thriftc {:path "thrift"
             :source-paths ["src/thrift"]
             :java-gen-opts "beans,hashcode,nocamel"
