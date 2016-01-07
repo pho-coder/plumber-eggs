@@ -22,7 +22,7 @@
 (defn- write-cache-to-db
   [task-conf]
   ; 根据不同的 target 使用不同的write方法，写入对应的数据库或文件
-  (db/write task-conf data-buffer (:target task-conf))
+  (db/write task-conf (.toByteArray data-buffer) "hdfs")
   (.reset data-buffer))
 
 (defn- write-row-buf-to-cache
@@ -39,13 +39,15 @@
         queue-will-overflow (>= (+ buf-len row-len) DATA-BUFFER-MAX-SIZE)]
     ; 1、检查队列是否将要溢出，如果将要溢出，则先把队列中的内容先写入数据库
     (if (true? queue-will-overflow)
-      (write-cache-to-db conf))
+        (write-cache-to-db conf))
     ; 2、再把当前的buffer写入队列中
     (write-row-buf-to-cache row-buf row-len)
     ; 3、如果所有结束，则把余下的数据也写入数据库
     (if (true? all-done)
-      (do (println "所有读写结束，写入剩下的数据。")
-          (write-cache-to-db conf)))))
+      (do
+        (log/info "所有读写结束，写入剩下的数据。")
+        (println "所有读写结束，写入剩下的数据。")
+        (write-cache-to-db conf)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-reader-status
@@ -96,10 +98,8 @@
             (let [row (.poll DATA-CACHE-QUEUE)
                   queue-size (.size DATA-CACHE-QUEUE)
                   all-done (and (= queue-size 0) (all-read-thread-done?))
-                  ; TODO 转化为字符串，去除特殊字符
                   row-str (str (clojure.string/join "\t" row) "\n")
                   row-buf (.getBytes row-str)]
-              ; TODO WRITE TO HADOOP
               (write conf row-buf all-done)
               (if (true? all-done)
                 (do

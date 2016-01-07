@@ -9,7 +9,7 @@
   (:use com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.bootstrap))
 
 ; 查询方法
-(defmulti query (fn [_ db-type] db-type))
+(defmulti query (fn [_ _ db-type] db-type))
 
 (defmethod query "mysql"
   [task-conf sql db-type]

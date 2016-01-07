@@ -21,7 +21,7 @@
 (def IO-ERROR "error")
 
 (def BASE-CONF {:source "mysql"
-                :target "mysql2hadoop.log."
+                :target "mysql2hadoop.log.1"
                 :host "127.0.0.1"
                 :sql "select * from Persons"
                 :sqls ["select * from Users" "select * from Persons"]

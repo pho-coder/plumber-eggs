@@ -58,7 +58,9 @@
 
 (defn start-task
   []
-  (upgrade-and-send-status STATUS-INIT)
+  ;(upgrade-and-send-status STATUS-INIT)
+  (reset! *task-conf* {:job-id "job-id" :task-id "task-id" :uuid "uuid" :conf BASE-CONF})
+  (println @*task-conf*)
   (let [f-reader (future (conveyor/reader @*task-conf*))
         f-writer (future (conveyor/writer @*task-conf*))]
     (log/info "reader thread:" @f-reader)

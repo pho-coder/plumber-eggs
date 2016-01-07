@@ -1,5 +1,4 @@
 (ns com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.hdfs
-  (:require [clojure.tools.logging :as log])
   (:import (org.apache.hadoop.conf Configuration)
            (org.apache.hadoop.fs FileSystem Path)
            (java.net URI)))
@@ -8,8 +7,8 @@
   "Returns the Hadoop configuration."
   []
   (let [config (Configuration.)]
-    (.addResource config (Path. "core-site.xml"))
-    (.addResource config (Path. "hdfs-site.xml"))
+    (.addResource config (Path. "/usr/local/hadoop/etc/hadoop/core-site.xml"))
+    (.addResource config (Path. "/usr/local/hadoop/etc/hadoop/hdfs-site.xml"))
     config))
 
 (defn write
