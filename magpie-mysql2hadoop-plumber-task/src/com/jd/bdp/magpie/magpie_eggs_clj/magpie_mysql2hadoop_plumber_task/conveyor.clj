@@ -2,13 +2,43 @@
   (:require [clojure.tools.logging :as log]
             [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.db :as db]
             )
-  (:use com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.bootstrap))
+  (:use com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.bootstrap)
+  (:import (java.io ByteArrayOutputStream)))
 
 (def ^:dynamic *reader-status* (atom nil))
 (def ^:dynamic *writer-status* (atom nil))
 
 (def ^:dynamic *done-thread-num* (atom 0))
 (def ^:dynamic *read-thread-num* (atom 0))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(def ^:dynamic data-buffer (ByteArrayOutputStream. DATA-BUFFER-MAX-SIZE))
+
+(defn- write-cache-to-db
+  [task-conf]
+  ; 根据不同的 target 使用不同的write方法，写入对应的数据库或文件
+  (db/write task-conf data-buffer (:target task-conf))
+  (.reset data-buffer))
+
+(defn- write-row-buf-to-cache
+  [row-buf row-len]
+  (.write data-buffer row-buf 0 row-len))
+
+(defn write
+  [conf row-buf all-done]
+  (let [buf-len (.size data-buffer)
+        row-len (alength row-buf)
+        queue-will-overflow (>= (+ buf-len row-len) DATA-BUFFER-MAX-SIZE)]
+    ; 1、检查队列是否将要溢出，如果将要溢出，则先把队列中的内容先写入数据库
+    (if (true? queue-will-overflow)
+      (write-cache-to-db conf))
+    ; 2、再把当前的buffer写入队列中
+    (write-row-buf-to-cache row-buf row-len)
+    ; 3、如果所有结束，则把余下的数据也写入数据库
+    (if (true? all-done)
+      (do (println "所有读写结束，写入剩下的数据。")
+          (write-cache-to-db conf)))))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-reader-status
   []
@@ -26,37 +56,30 @@
     true
     false))
 
-(defn start-query-thread
-  [user password db-name sql host]
-  (let [athread (future
-                  (try
-                    (doseq [row (db/query user password db-name sql host)]
-                      (while (>= (.size DATA-CACHE-QUEUE) QUEEU-LENGTH)
-                        (log/info "DATA-CACHE-QUEUE is full.")
-                        (Thread/sleep 1000))
-                      (.add DATA-CACHE-QUEUE row))
-                    ; 如果当前线程完成，*done-thread-num* 记数增加 1
-                    (swap! *done-thread-num* inc)
-                    (catch Exception e
-                      (log/error "reader error:" e)
-                      (reset! *reader-status* IO-ERROR))))]
-    @athread))
-
 (defn reader
   [taks-conf]
   (let [conf (:conf taks-conf)
-        [user password db-name sqls host] ((juxt :user :password :db-name :sqls :host) conf)]
+        sqls (:sqls conf)
+        source (:source conf)]
     ; 需要启动的线程总数
     (reset! *read-thread-num* (count sqls))
     (doseq [sql sqls]
-      (start-query-thread user password db-name sql host))))
+      (future
+        (try
+          (doseq [row (db/query conf sql source)]
+            (while (>= (.size DATA-CACHE-QUEUE) QUEEU-LENGTH)
+              (log/info "DATA-CACHE-QUEUE is full.")
+              (Thread/sleep 1000))
+            (.add DATA-CACHE-QUEUE row))
+          ; 如果当前线程完成，*done-thread-num* 记数增加 1
+          (swap! *done-thread-num* inc)
+          (catch Exception e
+            (log/error "reader error:" e)
+            (reset! *reader-status* IO-ERROR)))))))
 
 (defn writer
   [task-conf]
-  (let [conf (:conf task-conf)
-        uuid (:uuid task-conf)
-        job-id (:job-id task-conf)
-        task-id (:task-id task-conf)]
+  (let [conf (:conf task-conf)]
     (try
       (while true
         (if (> (.size DATA-CACHE-QUEUE) 0)
@@ -69,7 +92,7 @@
                   row-str (str (clojure.string/join "\t" row) "\n")
                   row-buf (.getBytes row-str)]
               ; TODO WRITE TO HADOOP
-              (db/write row-buf (:target conf) all-done)
+              (write conf row-buf all-done)
               (if (true? all-done)
                 (do
                   (reset! *reader-status* IO-DONE)

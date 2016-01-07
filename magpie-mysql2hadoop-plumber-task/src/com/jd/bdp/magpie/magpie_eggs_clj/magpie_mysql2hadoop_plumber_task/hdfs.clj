@@ -16,6 +16,7 @@
   [buffer str-path]
   (let [conf (configuration)
         hdfs (FileSystem/get (URI/create str-path) conf)
+        ;writer (.append hdfs (Path. str-path))
         writer (.create hdfs (Path. str-path))]
     (.write writer buffer)
     (.flush writer)
