@@ -30,6 +30,9 @@
   (.write data-buffer row-buf 0 row-len))
 
 (defn write
+  "conf 写入数据时所需的参数
+   row-buf 数据
+   all-done 是否全部结束（最后一次写入）"
   [conf row-buf all-done]
   (let [buf-len (.size data-buffer)
         row-len (alength row-buf)

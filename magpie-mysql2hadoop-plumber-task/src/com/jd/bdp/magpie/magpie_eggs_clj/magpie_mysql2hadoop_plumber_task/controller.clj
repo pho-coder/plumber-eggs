@@ -29,7 +29,7 @@
   init -> running -> (finish|stop)"
   [status]
   (reset! *task-status* status)
-  (send-status))
+  (future (send-status)))
 
 (defn task-done?
   []

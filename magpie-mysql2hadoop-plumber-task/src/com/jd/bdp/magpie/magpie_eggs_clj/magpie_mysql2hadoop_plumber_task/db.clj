@@ -27,6 +27,6 @@
 
 (defmethod write "hdfs"
   [task-conf buffer db-type]
+  (log/info "type of target db:" db-type)
   (let [str-path (:target task-conf)]
-    (log/info "type of target db:" db-type)
     (hdfs/write buffer str-path)))
