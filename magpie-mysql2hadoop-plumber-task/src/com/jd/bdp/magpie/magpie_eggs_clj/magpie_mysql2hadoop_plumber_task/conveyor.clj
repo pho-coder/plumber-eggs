@@ -1,7 +1,12 @@
-(ns com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.conveyor
+(ns ^{:author "xiaochaihu"
+      :doc "主要职责是：读取数据、前期数据格式规范、缓存数据、写入数据库
+            1、读取数据库中每行数据，转换为文本格式
+            2、把数据写入队列中
+            3、把数据从队列中读取出来，去除特殊字符，把数据写入缓冲区中
+            4、当缓冲区数据量满足写入数据库条件时，执行写入操作"}
+  com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.conveyor
   (:require [clojure.tools.logging :as log]
-            [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.db :as db]
-            )
+            [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.db :as db])
   (:use com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.bootstrap)
   (:import (java.io ByteArrayOutputStream)))
 

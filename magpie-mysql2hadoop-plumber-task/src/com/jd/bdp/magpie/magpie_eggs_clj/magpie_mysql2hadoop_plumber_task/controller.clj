@@ -1,4 +1,9 @@
-(ns com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.controller
+(ns ^{:author "xiaochaihu"
+      :doc "主要职责是：启动前准备、启动数据抽取工作线程、上发抽取任务的状态
+            1、启动前准备：连接albatross服务，获取任务配置信息
+            2、启动抽取、写入的线程
+            3、定期检查任务完成状态，向albatross服务上发任务状态"}
+  com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.controller
   (:require [clojure.tools.logging :as log]
             [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.client :as client]
             [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.conveyor :as conveyor]

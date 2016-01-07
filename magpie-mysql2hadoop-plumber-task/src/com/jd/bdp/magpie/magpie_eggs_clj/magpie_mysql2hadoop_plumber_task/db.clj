@@ -1,4 +1,8 @@
-(ns com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.db
+(ns ^{:author "xiaochaihu"
+      :doc "主要职责是：根据不同的数据来源和目标数据源，编写对应的数据处理方法
+            1、根据数据来源定义数据抽取过程，抽取前准备，调用对应的抽取方法
+            2、根据目标数据输出地作相应准备，连接数据库，调用对应的写入方法"}
+  com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.db
   (:require [clojure.java.jdbc :as jdbc]
             [com.jd.bdp.magpie.magpie-eggs-clj.magpie-mysql2hadoop-plumber-task.hdfs :as hdfs]
             [clojure.tools.logging :as log])
@@ -16,6 +20,7 @@
         rs (jdbc/query conf sql :as-arrays? true)]
     (map (fn [row] (map #(str %) row)) (rest rs))))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ; 写入方法
 (defmulti write (fn [_ _ db-type] db-type))
