@@ -88,21 +88,19 @@
   (let [conf (:conf task-conf)]
     (try
       (while true
-        (if (> (.size DATA-CACHE-QUEUE) 0)
-          (do
-            (log/info "queue's size =" (.size DATA-CACHE-QUEUE))
-            (let [row (.take DATA-CACHE-QUEUE)
-                  queue-size (.size DATA-CACHE-QUEUE)
-                  all-done (and (= queue-size 0) (all-read-thread-done?))
-                  row-str (str (clojure.string/join "\t" row) "\n")
-                  row-buf (.getBytes row-str)]
-              (write conf row-buf all-done)
-              (if (true? all-done)
-                (do
-                  (reset! *reader-status* IO-DONE)
-                  (reset! *writer-status* IO-DONE)))))
-          (do
-            (Thread/sleep 5))))
+        (log/info "queue's size =" (.size DATA-CACHE-QUEUE))
+        ; row-list = (.drainTo DATA-CACHE-QUEUE)
+        ; drainTo 方法可一次性取完队列中所有元素，效率比 take 高
+        (let [row (.take DATA-CACHE-QUEUE)
+              queue-size (.size DATA-CACHE-QUEUE)
+              all-done (and (= queue-size 0) (all-read-thread-done?))
+              row-str (str (clojure.string/join "\t" row) "\n")
+              row-buf (.getBytes row-str)]
+          (write conf row-buf all-done)
+          (if (true? all-done)
+            (do
+              (reset! *reader-status* IO-DONE)
+              (reset! *writer-status* IO-DONE)))))
       (catch Exception e
         (log/info "writer error:" e)
         (reset! *writer-status* IO-ERROR)))))
