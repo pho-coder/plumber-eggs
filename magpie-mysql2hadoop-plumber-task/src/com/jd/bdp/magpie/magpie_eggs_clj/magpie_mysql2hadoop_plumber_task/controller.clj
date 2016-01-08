@@ -57,12 +57,12 @@
   @*prepared*)
 
 (defn start-task
-  []
+  [& {:keys [path]}]
   ;(upgrade-and-send-status STATUS-INIT)
-  (reset! *task-conf* {:job-id "job-id" :task-id "task-id" :uuid "uuid" :conf BASE-CONF})
+  (reset! *task-conf* {:job-id "job-id" :task-id "task-id" :uuid "uuid" :conf (assoc BASE-CONF :target path)})
   (println @*task-conf*)
   (let [f-reader (future (conveyor/reader @*task-conf*))
         f-writer (future (conveyor/writer @*task-conf*))]
-    (log/info "reader thread:" @f-reader)
-    (log/info "writer thread:" @f-writer)))
+    (log/info "writer thread:" @f-writer)
+    (log/info "reader thread:" @f-reader)))
 

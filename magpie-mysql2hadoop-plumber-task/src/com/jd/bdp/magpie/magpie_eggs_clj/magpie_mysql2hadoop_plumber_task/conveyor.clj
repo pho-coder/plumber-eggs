@@ -91,6 +91,13 @@
   [task-conf]
   (let [conf (:conf task-conf)]
     (try
+      (future (while true
+                (println "all-read-thread-done?" (all-read-thread-done?))
+                (println "data-buffer size" (.size data-buffer))
+                (println "cache size" (.size DATA-CACHE-QUEUE))
+                (println "all done?" (and (= (.size DATA-CACHE-QUEUE) 0) (all-read-thread-done?)))
+                (Thread/sleep 1000)
+                ))
       (while true
         (if (> (.size DATA-CACHE-QUEUE) 0)
           (do
