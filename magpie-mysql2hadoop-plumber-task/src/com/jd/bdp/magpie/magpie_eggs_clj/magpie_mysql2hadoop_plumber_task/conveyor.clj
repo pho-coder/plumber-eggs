@@ -61,7 +61,7 @@
 
 (defn all-read-thread-done?
   []
-  (if (= @*done-thread-num* @*read-thread-num*)
+  (if (and (pos? @*done-thread-num*) (= @*done-thread-num* @*read-thread-num*))
     true
     false))
 
@@ -87,7 +87,7 @@
   [task-conf]
   (let [conf (:conf task-conf)]
     (try
-      (while true
+      (while (not (and (= (.size DATA-CACHE-QUEUE) 0) (all-read-thread-done?))) ;true
         (log/info "queue's size =" (.size DATA-CACHE-QUEUE))
         ; row-list = (.drainTo DATA-CACHE-QUEUE)
         ; drainTo 方法可一次性取完队列中所有元素，效率比 take 高

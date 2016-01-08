@@ -63,6 +63,6 @@
   (println @*task-conf*)
   (let [f-reader (future (conveyor/reader @*task-conf*))
         f-writer (future (conveyor/writer @*task-conf*))]
-    (log/info "writer thread:" @f-writer)
-    (log/info "reader thread:" @f-reader)))
+    (log/info "reader thread:" @f-reader)
+    (log/info "writer thread:" @f-writer)))
 
