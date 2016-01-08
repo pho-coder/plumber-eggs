@@ -7,8 +7,8 @@
   "Returns the Hadoop configuration."
   []
   (let [config (Configuration.)]
-    (.addResource config (Path. "/usr/local/hadoop/etc/hadoop/core-site.xml"))
-    (.addResource config (Path. "/usr/local/hadoop/etc/hadoop/hdfs-site.xml"))
+    (.addResource config (Path. "core-site.xml"))
+    (.addResource config (Path. "hdfs-site.xml"))
     config))
 
 (defn write
