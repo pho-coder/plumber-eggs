@@ -46,7 +46,6 @@
     (if (true? all-done)
       (do
         (log/info "所有读写结束，写入剩下的数据。")
-        (println "所有读写结束，写入剩下的数据。")
         (write-cache-to-db conf)))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -77,32 +76,22 @@
       (future
         (try
           (doseq [row (db/query conf sql source)]
-            (while (>= (.size DATA-CACHE-QUEUE) QUEEU-LENGTH)
-              (log/info "DATA-CACHE-QUEUE is full.")
-              (Thread/sleep 1000))
-            (.add DATA-CACHE-QUEUE row))
+              (.put DATA-CACHE-QUEUE row))
           ; 如果当前线程完成，*done-thread-num* 记数增加 1
           (swap! *done-thread-num* inc)
           (catch Exception e
-            (log/error "reader error:" e)
+            (log/info "reader error:" e)
             (reset! *reader-status* IO-ERROR)))))))
 
 (defn writer
   [task-conf]
   (let [conf (:conf task-conf)]
     (try
-      (future (while true
-                (println "all-read-thread-done?" (all-read-thread-done?))
-                (println "data-buffer size" (.size data-buffer))
-                (println "cache size" (.size DATA-CACHE-QUEUE))
-                (println "all done?" (and (= (.size DATA-CACHE-QUEUE) 0) (all-read-thread-done?)))
-                (Thread/sleep 1000)
-                ))
       (while true
         (if (> (.size DATA-CACHE-QUEUE) 0)
           (do
             (log/info "queue's size =" (.size DATA-CACHE-QUEUE))
-            (let [row (.poll DATA-CACHE-QUEUE)
+            (let [row (.take DATA-CACHE-QUEUE)
                   queue-size (.size DATA-CACHE-QUEUE)
                   all-done (and (= queue-size 0) (all-read-thread-done?))
                   row-str (str (clojure.string/join "\t" row) "\n")
@@ -113,8 +102,7 @@
                   (reset! *reader-status* IO-DONE)
                   (reset! *writer-status* IO-DONE)))))
           (do
-            (log/info "queue's size =" (.size DATA-CACHE-QUEUE) ", all read thread done? " (all-read-thread-done?))
             (Thread/sleep 5))))
       (catch Exception e
-        (log/error "writer error:" e)
+        (log/info "writer error:" e)
         (reset! *writer-status* IO-ERROR)))))
