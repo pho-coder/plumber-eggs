@@ -1,4 +1,4 @@
-(defproject com.jd.bdp.magpie.magpie-eggs-clj/magpie-mysql2hadoop-plumber-task "0.0.1-SNAPSHOT"
+(defproject com.jd.bdp.magpie.magpie-eggs-clj/magpie-mysql2hadoop-plumber-task "0.0.2-SNAPSHOT"
   :description "FIXME: write description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"

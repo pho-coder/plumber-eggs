@@ -12,12 +12,12 @@
 (defmulti query (fn [_ _ db-type] db-type))
 
 (defmethod query "mysql"
-  [task-conf sql db-type]
+  [conf sql db-type]
   (log/info "type of source db:" db-type)
   (let [spec {:subprotocol "mysql"}
-        [user password db-name host port] ((juxt :user :password :database :host :port) task-conf)
-        conf (into spec {:user user :password password :subname (str "//" host ":" port "/" db-name)})
-        rs (jdbc/query conf sql :as-arrays? true)]
+        [user password db-name host port] ((juxt :user :password :database :host :port) conf)
+        db-conf (into spec {:user user :password password :subname (str "//" host ":" port "/" db-name)})
+        rs (jdbc/query db-conf sql :as-arrays? true)]
     (map (fn [row] (map #(str %) row)) (rest rs))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
