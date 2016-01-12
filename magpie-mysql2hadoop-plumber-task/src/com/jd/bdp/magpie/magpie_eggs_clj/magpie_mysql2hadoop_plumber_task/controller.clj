@@ -61,8 +61,8 @@
   (upgrade-and-send-status STATUS-INIT)
   ;(reset! *task-conf* {:job-id "job-id" :task-id "task-id" :uuid "uuid" :conf (assoc BASE-CONF :target path)})
   (println @*task-conf*)
-  (let [f-reader (future (conveyor/reader @*task-conf*))
-        f-writer (future (conveyor/writer @*task-conf*))]
+  (let [f-reader (future (conveyor/reader (:reader (:conf @*task-conf*))))
+        f-writer (future (conveyor/writer (:writer (:conf @*task-conf*))))]
     (log/info "reader thread:" @f-reader)
     (log/info "writer thread:" @f-writer)))
 

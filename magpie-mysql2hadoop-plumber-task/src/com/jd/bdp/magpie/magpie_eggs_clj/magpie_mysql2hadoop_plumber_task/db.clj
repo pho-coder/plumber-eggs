@@ -15,8 +15,8 @@
   [task-conf sql db-type]
   (log/info "type of source db:" db-type)
   (let [spec {:subprotocol "mysql"}
-        [user password db-name host] ((juxt :user :password :db-name :host) task-conf)
-        conf (into spec {:user user :password password :subname (str "//" host ":3306/" db-name)})
+        [user password db-name host port] ((juxt :user :password :database :host :port) task-conf)
+        conf (into spec {:user user :password password :subname (str "//" host ":" port "/" db-name)})
         rs (jdbc/query conf sql :as-arrays? true)]
     (map (fn [row] (map #(str %) row)) (rest rs))))
 
@@ -26,7 +26,17 @@
 (defmulti write (fn [_ _ db-type] db-type))
 
 (defmethod write "hdfs"
-  [task-conf buffer db-type]
+  [conf buffer db-type]
   (log/info "type of target db:" db-type)
-  (let [str-path (:target task-conf)]
-    (hdfs/write buffer str-path)))
+  (let [db-path (:extend conf)
+        tablename (:tablename conf)
+        target-path (str db-path "/" tablename)]
+    (hdfs/write buffer target-path)))
+
+(defmethod write "hive"
+  [conf buffer db-type]
+  (log/info "type of target db:" db-type)
+  (let [db-path (:extend conf)
+        tablename (:tablename conf)
+        target-path (str db-path "/" tablename)]
+    (hdfs/write buffer target-path)))

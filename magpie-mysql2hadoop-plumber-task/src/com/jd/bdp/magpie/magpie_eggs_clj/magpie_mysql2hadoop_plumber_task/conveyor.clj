@@ -16,13 +16,12 @@
 (def ^:dynamic *done-thread-num* (atom 0))
 (def ^:dynamic *read-thread-num* (atom 0))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (def ^:dynamic data-buffer (ByteArrayOutputStream. DATA-BUFFER-MAX-SIZE))
 
 (defn- write-cache-to-db
-  [task-conf]
+  [conf]
   ; 根据不同的 target 使用不同的write方法，写入对应的数据库或文件
-  (db/write task-conf (.toByteArray data-buffer) "hdfs")
+  (db/write conf (.toByteArray data-buffer) (:subprotocol conf))
   (.reset data-buffer))
 
 (defn- write-row-buf-to-cache
@@ -47,7 +46,6 @@
       (do
         (log/info "所有读写结束，写入剩下的数据。")
         (write-cache-to-db conf)))))
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defn get-reader-status
   []
@@ -66,26 +64,23 @@
     false))
 
 (defn reader
-  [taks-conf]
-  (let [conf (:conf taks-conf)
-        sqls (:sqls conf)
-        source (:source conf)]
+  [conf]
+  (let [sql (:sql conf)
+        subprotocol (:subprotocol conf)]
     ; 需要启动的线程总数
-    (reset! *read-thread-num* (count sqls))
-    (doseq [sql sqls]
-      (future
-        (try
-          (doseq [row (db/query conf sql source)]
-              (.put DATA-CACHE-QUEUE row))
-          ; 如果当前线程完成，*done-thread-num* 记数增加 1
-          (swap! *done-thread-num* inc)
-          (catch Exception e
-            (log/info "reader error:" e)
-            (reset! *reader-status* IO-ERROR)))))))
+    (reset! *read-thread-num* 1)
+    (future
+      (try
+        (doseq [row (db/query conf sql subprotocol)]
+          (.put DATA-CACHE-QUEUE row))
+        ; 如果当前线程完成，*done-thread-num* 记数增加 1
+        (swap! *done-thread-num* inc)
+        (catch Exception e
+          (log/info "reader error:" e)
+          (reset! *reader-status* IO-ERROR))))))
 
 (defn writer
-  [task-conf]
-  (let [conf (:conf task-conf)]
+  [conf]
     (try
       (while (not (and (= (.size DATA-CACHE-QUEUE) 0) (all-read-thread-done?))) ;true
         (log/info "queue's size =" (.size DATA-CACHE-QUEUE))
@@ -103,4 +98,4 @@
               (reset! *writer-status* IO-DONE)))))
       (catch Exception e
         (log/info "writer error:" e)
-        (reset! *writer-status* IO-ERROR)))))
+        (reset! *writer-status* IO-ERROR))))
