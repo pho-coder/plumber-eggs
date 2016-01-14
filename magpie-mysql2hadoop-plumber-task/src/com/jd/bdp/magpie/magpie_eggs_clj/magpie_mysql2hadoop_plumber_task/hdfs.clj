@@ -13,12 +13,11 @@
 
 (defn write
   [buffer str-path]
-  (let [conf (configuration)
+  (let [str-path (str str-path "." (System/currentTimeMillis))
+        conf (configuration)
         hdfs (FileSystem/get (URI/create str-path) conf)
         path (Path. str-path)
-        writer (if (.exists hdfs path)
-                 (.append hdfs path)
-                 (.create hdfs path))]
+        writer (.create hdfs path)]
     (.write writer buffer)
     (.flush writer)
     (.sync writer)

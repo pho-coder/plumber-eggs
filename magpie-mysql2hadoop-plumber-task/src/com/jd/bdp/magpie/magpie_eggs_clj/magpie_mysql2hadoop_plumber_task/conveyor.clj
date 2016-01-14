@@ -44,8 +44,8 @@
     ; 3、如果所有结束，则把余下的数据也写入数据库
     (if (true? all-done)
       (do
-        (log/info "所有读写结束，写入剩下的数据。")
-        (write-cache-to-db conf)))))
+        (write-cache-to-db conf)
+        (log/info "所有读写结束，写入剩下的数据。")))))
 
 (defn get-reader-status
   []
@@ -65,19 +65,21 @@
 
 (defn reader
   [conf]
-  (let [sql (:sql conf)
+  (let [sqls (:sqls conf)
         subprotocol (:subprotocol conf)]
     ; 需要启动的线程总数
-    (reset! *read-thread-num* 1)
-    (future
-      (try
-        (doseq [row (db/query conf sql subprotocol)]
-          (.put DATA-CACHE-QUEUE row))
-        ; 如果当前线程完成，*done-thread-num* 记数增加 1
-        (swap! *done-thread-num* inc)
-        (catch Exception e
-          (log/info "reader error:" e)
-          (reset! *reader-status* IO-ERROR))))))
+    (reset! *read-thread-num* (count sqls))
+    (doseq [sql sqls]
+      (log/info sql)
+      (future
+        (try
+          (doseq [row (db/query conf sql subprotocol)]
+            (.put DATA-CACHE-QUEUE row))
+          ; 如果当前线程完成，*done-thread-num* 记数增加 1
+          (swap! *done-thread-num* inc)
+          (catch Exception e
+            (log/info "reader error:" e)
+            (reset! *reader-status* IO-ERROR)))))))
 
 (defn writer
   [conf]
