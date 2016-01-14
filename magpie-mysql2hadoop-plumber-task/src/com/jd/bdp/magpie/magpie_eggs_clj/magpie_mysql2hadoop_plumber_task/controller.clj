@@ -19,24 +19,18 @@
   []
   @*task-status*)
 
-(defn- send-status
-  "向albatross服务发送心跳，报告当前状态"
-  []
-  (client/heartbeat (:job-id @*task-conf*) (:task-id @*task-conf*) (get-task-status)))
-
-(defn upgrade-and-send-status
+(defn upgrade-status
   "任务的状态不能倒退
   init -> running -> (finish|stop)"
   [status]
-  (reset! *task-status* status)
-  (future (send-status)))
+  (reset! *task-status* status))
 
 (defn task-done?
   []
   (let [size (.size DATA-CACHE-QUEUE)]
     (if (= IO-DONE (conveyor/get-reader-status))
-      (if (= 0 size) (upgrade-and-send-status STATUS-FINISH) (upgrade-and-send-status STATUS-RUNNING))
-      (if (true? (conveyor/task-has-error?)) (upgrade-and-send-status STATUS-STOP) (upgrade-and-send-status STATUS-RUNNING))))
+      (if (= 0 size) (upgrade-status STATUS-FINISH) (upgrade-status STATUS-RUNNING))
+      (if (true? (conveyor/task-has-error?)) (upgrade-status STATUS-STOP) (upgrade-status STATUS-RUNNING))))
   (condp = @*task-status*
     STATUS-FINISH true
     false))
@@ -47,7 +41,6 @@
   (let [job-id (utils/get-job-id task-id)
         uuid (utils/get-task-uuid task-id)
         conf (client/get-conf task-id)]
-    (log/info "type of conf" (type conf))
     (reset! *task-conf* {:job-id job-id :task-id task-id :uuid uuid :conf conf}))
   (log/info "task conf:" @*task-conf*)
   (reset! *prepared* true))
@@ -56,13 +49,22 @@
   []
   @*prepared*)
 
+(defn- check-and-hearbeat
+  "向albatross服务发送心跳，报告当前状态"
+  []
+  (future (while true
+            (task-done?)
+            (client/heartbeat (:job-id @*task-conf*) (:task-id @*task-conf*) (get-task-status))
+            (Thread/sleep 10))))
+
 (defn start-task
   [& {:keys [path]}]
-  (upgrade-and-send-status STATUS-INIT)
+  (upgrade-status STATUS-INIT)
   ;(reset! *task-conf* {:job-id "job-id" :task-id "task-id" :uuid "uuid" :conf (assoc BASE-CONF :target path)})
   (println @*task-conf*)
   (let [f-reader (future (conveyor/reader (:reader (:conf @*task-conf*))))
         f-writer (future (conveyor/writer (:writer (:conf @*task-conf*))))]
+    (check-and-hearbeat)
     (log/info "reader thread:" @f-reader)
     (log/info "writer thread:" @f-writer)))
 

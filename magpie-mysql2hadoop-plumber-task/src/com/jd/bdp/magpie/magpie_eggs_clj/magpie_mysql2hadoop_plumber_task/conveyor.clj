@@ -70,7 +70,6 @@
     ; 需要启动的线程总数
     (reset! *read-thread-num* (count sqls))
     (doseq [sql sqls]
-      (log/info sql)
       (future
         (try
           (doseq [row (db/query conf sql subprotocol)]
